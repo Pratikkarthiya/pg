@@ -1,8 +1,11 @@
 .local/
 dist-local/
+dist-netlify/
+.netlify/
 node_modules/
 .env
 .env.*
+!.env.example
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm

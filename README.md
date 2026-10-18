@@ -1,25 +1,29 @@
 ﻿# Bliss Girls PG
 
-The active app uses Node.js 24, SQLite and file uploads. It supports local development and Render hosting. It does not use Cloudflare.
+Liquid-glass PG website and resident portal, prepared for **Netlify Free + Supabase Free**.
 
-## Deploy on Render
+- Netlify serves the website and API.
+- Supabase PostgreSQL stores accounts, room assignments, rent records, requests and notices.
+- Supabase private Storage stores room photos and payment proofs.
+- Resident data is not stored on Netlify's temporary filesystem.
+- No Cloudflare services or paid Render resources are used.
 
-The root `render.yaml` provisions a Node web service and persistent disk. See [RENDER-DEPLOY.md](RENDER-DEPLOY.md) for setup, costs, secrets and the first administrator account. A Render account connection is required to create the service. [Deploy from this GitHub repository](https://render.com/deploy?repo=https://github.com/Pratikkarthiya/pg).
+Read [NETLIFY-SUPABASE.md](NETLIFY-SUPABASE.md) to connect accounts, apply the migration and deploy from GitHub. A pushed commit is not proof of a live deployment.
 
-## Run locally
-
-Run from this directory:
+## Local offline preview
 
 ```powershell
 node server/index.mjs
 ```
 
-Open http://127.0.0.1:5173/setup to create the first administrator. Then use /admin to invite residents and /resident for resident login.
+Open http://127.0.0.1:5173/setup. This separate SQLite preview does not read or change hosted Supabase data.
 
-Includes room and bed assignments, monthly rent records, payment-reference review, private screenshots, complaints, notices, room photos and advertised rent.
+## Checks and build
 
-Read LOCAL-SETUP.md for complete workflows, storage, backup, password recovery and limitations. No deployment has been performed. Historical framework files are not the active runtime.
+```powershell
+npm ci
+npm test
+npm run build
+```
 
-Checks: `node --test tests/local-portal.test.mjs tests/room-validation.test.ts`
-
-Local bundle: `node scripts/build-local.mjs`
+Node 24 is required. The cloud test runs the actual PostgreSQL migration in PGlite and checks the serverless API with a simulated storage service. Real deployment still requires verification against the connected accounts.

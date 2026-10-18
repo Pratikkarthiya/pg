@@ -14,7 +14,7 @@ test('public deployment refuses insecure origins and missing setup or persistenc
   assert.throws(()=>publicConfiguration('https://bliss.example','short','/data'),/BLISS_SETUP_TOKEN/);
   assert.throws(()=>publicConfiguration('https://bliss.example','x'.repeat(32),''),/BLISS_DATA_DIR/);
 });
-test('Render proxy mode protects setup, validates hosts and origins, sets secure cookies, and issues public invitation links',async()=>{
+test('legacy Node HTTPS proxy mode protects setup, validates hosts and origins, sets secure cookies, and issues public invitation links',async()=>{
   const directory=await mkdtemp(path.join(tmpdir(),'bliss-render-test-'));
   const origin='https://bliss-test.onrender.com',secret=randomBytes(32).toString('hex');
   const {server,db}=createApplication({dataDir:directory,publicOrigin:origin,setupToken:secret});

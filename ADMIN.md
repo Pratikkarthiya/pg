@@ -1,10 +1,7 @@
 ﻿# Bliss administrator
 
-The current administrator uses a local email/password account, not ChatGPT sign-in.
+For the hosted Netlify + Supabase app, see NETLIFY-SUPABASE.md. Configure the server-side secrets, apply the Supabase migration, verify /healthz, then open /setup with the private setup key to create the first administrator.
 
-1. Start the local server with `node server/index.mjs`.
-2. On first run, open http://127.0.0.1:5173/setup and create the administrator.
-3. Manage residents, room assignments, rent, payment review, complaints, notices and room photos at /admin.
-4. Give residents their individual, one-time invitation links. Resident login is at /resident.
+Use /admin to assign residents and manage rent, payment review, requests, notices and room photos. Residents use one-time invitations and sign in at /resident.
 
-See LOCAL-SETUP.md for details. Cloudflare and the previously published Site are not used by this version.
+The local server remains available as an offline preview using a separate SQLite database. Its setup, data and recovery script do not affect hosted data.

@@ -1,0 +1,38 @@
+[build]
+  command = "npm test && node scripts/build-netlify.mjs"
+  publish = "dist-netlify"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/admin"
+  to = "/portal.html"
+  status = 200
+[[redirects]]
+  from = "/resident"
+  to = "/portal.html"
+  status = 200
+[[redirects]]
+  from = "/login"
+  to = "/portal.html"
+  status = 200
+[[redirects]]
+  from = "/setup"
+  to = "/portal.html"
+  status = 200
+[[redirects]]
+  from = "/accept-invite"
+  to = "/portal.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "same-origin"

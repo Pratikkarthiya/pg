@@ -1,6 +1,6 @@
 # Bliss — local resident management
 
-The active application uses Node.js 24+, built-in SQLite, and local file storage. It does not use Cloudflare, Workers, D1, R2, Wrangler, Sites hosting, or ChatGPT sign-in. Historical framework files remain in the checkout for reference and are not loaded by the active server.
+This document covers the offline preview, which uses Node.js 24+, built-in SQLite, and local file storage. Hosted deployment now uses Netlify + Supabase; see NETLIFY-SUPABASE.md. Neither runtime uses Cloudflare, Workers, D1, R2, Wrangler, Sites hosting, or ChatGPT sign-in.
 
 ## Start
 
@@ -17,7 +17,7 @@ Or run `node preview.cjs` from the workspace root. Open `http://127.0.0.1:5173`.
 3. Copy the invitation link and share it manually. No emails are sent. The link expires in 72 hours and can be used once to choose a password. Local links work only on this computer.
 4. Residents sign in at `/resident` or `/login`. Each resident sees only their own stay, rent records, payment proofs and requests, plus shared notices.
 
-Without public deployment settings, the server deliberately binds only to loopback. For the authorized Render deployment, see RENDER-DEPLOY.md. Render mode uses HTTPS, Secure cookies, a private first-admin setup key and a persistent disk. Local data and hosted data remain separate; nothing in the local data directory is pushed to Git.
+The offline server deliberately binds only to loopback. For the selected Netlify + Supabase deployment, see NETLIFY-SUPABASE.md. Local data and hosted data remain separate; nothing in the local data directory is pushed to Git.
 
 ## Workflows
 
