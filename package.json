@@ -1,0 +1,15 @@
+{
+  "name": "bliss-girls-pg",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node server/index.mjs",
+    "start": "node server/index.mjs",
+    "build": "node scripts/build-local.mjs",
+    "test": "node --test tests/local-portal.test.mjs tests/room-validation.test.ts"
+  }
+}
