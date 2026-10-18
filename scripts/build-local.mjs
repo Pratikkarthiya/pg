@@ -2,7 +2,7 @@ import { mkdir, cp, readFile, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 const root=path.resolve(import.meta.dirname,'..');
-for(const file of ['server/index.mjs','server/database.mjs','server/security.mjs','public/app.js','public/portal.js']){
+for(const file of ['server/index.mjs','server/database.mjs','server/security.mjs','server/config.mjs','public/app.js','public/portal.js']){
   const result=spawnSync(process.execPath,['--check',path.join(root,file)],{stdio:'inherit'});if(result.status!==0)process.exit(result.status||1);
 }
 const output=path.join(root,'dist-local');await mkdir(output,{recursive:true});

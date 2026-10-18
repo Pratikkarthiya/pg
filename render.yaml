@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: bliss-girls-pg
+    runtime: node
+    plan: 0.5c-512mb
+    region: singapore
+    branch: main
+    autoDeployTrigger: commit
+    buildCommand: node --test tests/local-portal.test.mjs tests/render-deployment.test.mjs tests/room-validation.test.ts && node scripts/build-local.mjs
+    startCommand: node server/index.mjs
+    healthCheckPath: /healthz
+    numInstances: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: BLISS_DATA_DIR
+        value: /var/data/bliss
+      - key: BLISS_SETUP_TOKEN
+        generateValue: true
+    disk:
+      name: bliss-data
+      mountPath: /var/data
+      sizeGB: 1

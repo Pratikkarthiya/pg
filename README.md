@@ -1,6 +1,12 @@
 ﻿# Bliss Girls PG
 
-The active app runs locally using Node.js 24, SQLite and local uploads. It does not use Cloudflare.
+The active app uses Node.js 24, SQLite and file uploads. It supports local development and Render hosting. It does not use Cloudflare.
+
+## Deploy on Render
+
+The root `render.yaml` provisions a Node web service and persistent disk. See [RENDER-DEPLOY.md](RENDER-DEPLOY.md) for setup, costs, secrets and the first administrator account. A Render account connection is required to create the service. [Deploy from this GitHub repository](https://render.com/deploy?repo=https://github.com/Pratikkarthiya/pg).
+
+## Run locally
 
 Run from this directory:
 

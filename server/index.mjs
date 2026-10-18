@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, mkdir, unlink } from 'node:fs/promises';
 import { openDatabase } from './database.mjs';
-import { token, digest, hashPassword, verifyPassword, passwordError, imageType } from './security.mjs';
+import { token, digest, hashPassword, verifyPassword, passwordError, imageType, equalTokens } from './security.mjs';
+import { publicConfiguration } from './config.mjs';
 
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const roomSlugs = ['two-sharing', 'four-sharing'];
@@ -19,7 +20,8 @@ function email(value) { const result = text(value, 'email', 254).toLowerCase(); 
 function money(value, zero = false) { if (!Number.isInteger(value) || value < (zero ? 0 : 1) || value > 1000000) fail(400, 'Enter a whole-rupee amount up to ₹10,00,000.'); return value; }
 function validDate(value) { if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0,10) !== value) fail(400, 'Choose a valid date.'); return value; }
 
-export function createApplication({ dataDir = process.env.BLISS_DATA_DIR || path.join(project, '.local') } = {}) {
+export function createApplication({ dataDir = process.env.BLISS_DATA_DIR || path.join(project, '.local'), publicOrigin = process.env.BLISS_PUBLIC_ORIGIN || process.env.RENDER_EXTERNAL_URL || '', setupToken = process.env.BLISS_SETUP_TOKEN || '' } = {}) {
+  const config = publicConfiguration(publicOrigin, setupToken, publicOrigin ? (process.env.BLISS_DATA_DIR || (dataDir !== path.join(project,'.local') ? dataDir : '')) : dataDir);
   const db = openDatabase(dataDir); const uploads = path.join(dataDir, 'uploads');
   const loginAttempts = new Map();
   const stmt = (sql, ...args) => db.prepare(sql).all(...args);
@@ -51,7 +53,7 @@ export function createApplication({ dataDir = process.env.BLISS_DATA_DIR || path
   function session(res, id) {
     const value = token(); run('DELETE FROM sessions WHERE expires_at<?', Date.now());
     run('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)', digest(value), id, Date.now()+12*60*60*1000);
-    res.setHeader('Set-Cookie', `bliss_session=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=43200`);
+    res.setHeader('Set-Cookie', `bliss_session=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=43200${config.secure ? '; Secure' : ''}`);
   }
   function rooms() { return roomSlugs.map(slug => ({ slug, name: slug === roomSlugs[0] ? 'Two sharing' : 'Four sharing', rent: one('SELECT rent FROM room_settings WHERE slug=?', slug)?.rent ?? null,
     photos: stmt("SELECT id,caption FROM files WHERE purpose='room' AND room_slug=? ORDER BY created_at,id", slug).map(p => ({ ...p, url: `/api/photos/${p.id}` })) })); }
@@ -75,16 +77,20 @@ export function createApplication({ dataDir = process.env.BLISS_DATA_DIR || path
 
   async function handle(req, res) {
     res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'same-origin'); res.setHeader('X-Frame-Options', 'DENY');
+    if (config.secure) res.setHeader('Strict-Transport-Security','max-age=31536000');
+    if (req.url === '/healthz' && ['GET','HEAD'].includes(req.method)) { one('SELECT 1'); return json(res,{status:'ok'}); }
     const port = server.address()?.port;
-    const hosts = [`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`];
+    const hosts = config.origin ? [new URL(config.origin).host] : [`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`];
     if (!hosts.includes(req.headers.host)) fail(421, 'Use the local Bliss website address.');
-    const origin = `http://${req.headers.host}`; const url = new URL(req.url, origin); const route = url.pathname; const method = req.method;
+    const origin = config.origin || `http://${req.headers.host}`; const url = new URL(req.url, origin); const route = url.pathname; const method = req.method;
     if (!['GET','HEAD'].includes(method) && req.headers.origin !== origin) fail(403, 'Submit changes from the Bliss website.');
     if (route.startsWith('/api/')) {
-      if (route === '/api/me' && method === 'GET') return json(res, { user: userFor(req), needsSetup: !one("SELECT id FROM users WHERE role='admin'") });
+      if (route === '/api/me' && method === 'GET') return json(res, { user: userFor(req), needsSetup: !one("SELECT id FROM users WHERE role='admin'"), setupTokenRequired: config.secure });
       if (route === '/api/setup' && method === 'POST') {
         if (one("SELECT id FROM users WHERE role='admin'")) fail(409, 'Administrator setup has already been completed.');
-        const data = await input(req); const name = text(data.name,'name',80), address = email(data.email); const invalid = passwordError(data.password); if (invalid) fail(400, invalid);
+        const data = await input(req);
+        if(config.secure && !equalTokens(data.setupToken,setupToken)) fail(403,'Enter the private setup key from your Render environment settings.');
+        const name = text(data.name,'name',80), address = email(data.email); const invalid = passwordError(data.password); if (invalid) fail(400, invalid);
         const hash = await hashPassword(data.password); const id = randomUUID();
         transaction(() => { if (one("SELECT id FROM users WHERE role='admin'")) fail(409, 'Administrator setup has already been completed.'); run('INSERT INTO users(id,name,email,password_hash,role,created_at) VALUES(?,?,?,?,?,?)',id,name,address,hash,'admin',now()); });
         session(res,id); return json(res,{ saved:true },201);
@@ -99,7 +105,7 @@ export function createApplication({ dataDir = process.env.BLISS_DATA_DIR || path
         const valid = await verifyPassword(data.password, user?.password_hash || '00000000000000000000000000000000:'+'00'.repeat(64));
         if (!user?.password_hash || !valid) fail(401,'Invalid email or password.'); loginAttempts.delete(key); session(res,user.id); return json(res,{role:user.role});
       }
-      if (route === '/api/logout' && method === 'POST') { const match = /(?:^|;\s*)bliss_session=([A-Za-z0-9_-]+)/.exec(req.headers.cookie||''); if (match) run('DELETE FROM sessions WHERE token_hash=?',digest(match[1])); res.setHeader('Set-Cookie','bliss_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0'); return json(res,{saved:true}); }
+      if (route === '/api/logout' && method === 'POST') { const match = /(?:^|;\s*)bliss_session=([A-Za-z0-9_-]+)/.exec(req.headers.cookie||''); if (match) run('DELETE FROM sessions WHERE token_hash=?',digest(match[1])); res.setHeader('Set-Cookie',`bliss_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${config.secure ? '; Secure' : ''}`); return json(res,{saved:true}); }
       if (route === '/api/accept-invite' && method === 'POST') {
         const data = await input(req); const value = text(data.token,'invitation token',100); const invalid = passwordError(data.password); if (invalid) fail(400,invalid);
         const hash = await hashPassword(data.password);
@@ -193,6 +199,9 @@ export function createApplication({ dataDir = process.env.BLISS_DATA_DIR || path
   return {server,db};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
-  const port=Number(process.env.PORT||5173); const {server}=createApplication();
-  server.listen(port,'127.0.0.1',()=>console.log(`Bliss local website: http://127.0.0.1:${port}\nFirst run: open /setup to create your administrator. No Cloudflare services are used.`));
+  const port=Number(process.env.PORT||5173); const {server,db}=createApplication();
+  const publicOrigin=process.env.BLISS_PUBLIC_ORIGIN||process.env.RENDER_EXTERNAL_URL||'';
+  if(process.env.RENDER==='true'&&!publicOrigin)throw new Error('Render must provide RENDER_EXTERNAL_URL or BLISS_PUBLIC_ORIGIN.');
+  server.listen(port,publicOrigin?'0.0.0.0':'127.0.0.1',()=>console.log(`Bliss website: ${publicOrigin||`http://127.0.0.1:${port}`}\nFirst run: open /setup to create your administrator. No Cloudflare services are used.`));
+  for(const signal of ['SIGTERM','SIGINT'])process.once(signal,()=>{const timer=setTimeout(()=>{server.closeAllConnections();},5000);timer.unref();server.close(()=>{clearTimeout(timer);db.close();process.exit(0);});});
 }

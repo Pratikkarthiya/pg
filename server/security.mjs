@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 const scrypt = promisify(scryptCallback);
 export const token = () => randomBytes(32).toString('base64url');
 export const digest = value => createHash('sha256').update(value).digest('hex');
+export const equalTokens = (left, right) => typeof left === 'string' && typeof right === 'string' && timingSafeEqual(Buffer.from(digest(left),'hex'),Buffer.from(digest(right),'hex'));
 export async function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
   const key = await scrypt(password, salt, 64);

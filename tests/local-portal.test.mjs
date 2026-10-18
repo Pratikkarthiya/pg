@@ -7,7 +7,7 @@ import { createApplication } from '../server/index.mjs';
 
 test('local resident workflow protects accounts, rooms, payment proofs and requests, and persists across restarts', async()=>{
   const directory=await mkdtemp(path.join(tmpdir(),'bliss-portal-test-'));
-  let application=createApplication({dataDir:directory});
+  let application=createApplication({dataDir:directory,publicOrigin:'',setupToken:''});
   const listen=()=>new Promise(resolve=>application.server.listen(0,'127.0.0.1',resolve));
   const close=async()=>{application.server.closeAllConnections();await new Promise(resolve=>application.server.close(resolve));application.db.close();};
   await listen();let base=`http://127.0.0.1:${application.server.address().port}`;
@@ -79,7 +79,7 @@ test('local resident workflow protects accounts, rooms, payment proofs and reque
     await expect(admin.request(`/api/admin/residents/${personB.user_id}/end-stay`,{}),200);await expect(b.request('/api/state'),401);await expect(b.request('/api/login',{email:'b@example.test',password}),401);
     await expect(admin.request('/api/admin/residents',{...stay,bed:2,name:'Resident C',email:'c@example.test'}),201);
     for(const route of ['/','/admin','/resident','/portal.js','/portal.css','/glass-base.css'])await expect(anonymous.request(route),200);
-    await close();application=createApplication({dataDir:directory});await listen();base=`http://127.0.0.1:${application.server.address().port}`;
+    await close();application=createApplication({dataDir:directory,publicOrigin:'',setupToken:''});await listen();base=`http://127.0.0.1:${application.server.address().port}`;
     const persisted=await expect(admin.request('/api/state'),200);assert.equal(persisted.residents.length,3);assert.equal(persisted.complaints.length,1);assert.equal(persisted.charges.length,2);assert.equal(persisted.rooms[0].rent,10500);
     assert.equal(persisted.residents.find(r=>r.user_id===personB.user_id).active,0);
   }finally{

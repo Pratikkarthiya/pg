@@ -6,4 +6,5 @@ const admin=db.prepare("SELECT id FROM users WHERE role='admin' AND active=1 ORD
 if(!admin){console.error('Create the administrator at /setup first.');db.close();process.exit(1);}
 const value=token();db.exec('BEGIN IMMEDIATE');
 try{db.prepare('DELETE FROM invites WHERE user_id=?').run(admin.id);db.prepare('INSERT INTO invites(token_hash,user_id,expires_at) VALUES(?,?,?)').run(digest(value),admin.id,Date.now()+30*60*1000);db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
-console.log(`Start the local server, then open this private reset link within 30 minutes:\nhttp://127.0.0.1:${process.env.PORT||5173}/accept-invite#${value}`);db.close();
+const origin=process.env.BLISS_PUBLIC_ORIGIN||process.env.RENDER_EXTERNAL_URL||`http://127.0.0.1:${process.env.PORT||5173}`;
+console.log(`Open this private reset link within 30 minutes:\n${origin}/accept-invite#${value}`);db.close();

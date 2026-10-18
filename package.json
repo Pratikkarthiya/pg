@@ -10,6 +10,6 @@
     "dev": "node server/index.mjs",
     "start": "node server/index.mjs",
     "build": "node scripts/build-local.mjs",
-    "test": "node --test tests/local-portal.test.mjs tests/room-validation.test.ts"
+    "test": "node --test tests/local-portal.test.mjs tests/render-deployment.test.mjs tests/room-validation.test.ts"
   }
 }
