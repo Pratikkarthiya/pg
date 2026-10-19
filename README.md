@@ -1,6 +1,8 @@
 ﻿# Bliss Girls PG
 
-Liquid-glass PG website and resident portal, prepared for **Netlify Free + Supabase Free**.
+**Current version: browser-only demo.** Pink liquid-glass website with sample admin and resident dashboards. No database or passwords required. Read [DEMO.md](DEMO.md) and run `npm run dev` to preview. Publish `dist-netlify` on Netlify.
+
+The hosted API is disabled for the demo. The following describes the preserved full backend for reference:
 
 - Netlify serves the website and API.
 - Supabase PostgreSQL stores accounts, room assignments, rent records, requests and notices.

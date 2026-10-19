@@ -7,11 +7,12 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "node server/index.mjs",
-    "start": "node server/index.mjs",
+    "dev": "node scripts/build-netlify.mjs && node scripts/preview-demo.mjs",
+    "start": "node scripts/build-netlify.mjs && node scripts/preview-demo.mjs",
+    "dev:local": "node server/index.mjs",
     "build": "node scripts/build-netlify.mjs",
     "build:local": "node scripts/build-local.mjs",
-    "test": "node --test tests/local-portal.test.mjs tests/render-deployment.test.mjs tests/supabase-cloud.test.mjs tests/room-validation.test.ts"
+    "test": "node --test tests/demo.test.mjs tests/local-portal.test.mjs tests/render-deployment.test.mjs tests/supabase-cloud.test.mjs tests/room-validation.test.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.10"

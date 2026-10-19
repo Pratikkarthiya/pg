@@ -1,5 +1,7 @@
 # Project constraints
 
+- The user now wants a demo only. Netlify builds inject public/demo.js and use browser sample data. Keep the deployed API disabled; never access real Supabase resident data from the demo. See DEMO.md. Older backend instructions below are historical unless the user asks to restore real accounts.
+
 - The user explicitly said never to use their Cloudflare account or services. Do not run Cloudflare, Wrangler, Workers, D1, R2 or Sites deployment operations for this project.
 - The user selected free-tier Netlify hosting with Supabase PostgreSQL and private Storage. Use netlify.toml and NETLIFY-SUPABASE.md. Do not provision paid Render resources.
 - Netlify uses cloud/api.mjs and Supabase migrations; server/index.mjs is an offline SQLite preview only. Never use SQLite or Netlify's local filesystem for hosted resident data.

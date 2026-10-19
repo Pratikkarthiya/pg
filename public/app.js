@@ -22,7 +22,7 @@ document.getElementById('name').addEventListener('input', event => event.target.
 
 async function loadRoomDetails() {
   try {
-    const response = await fetch('/api/rooms', { cache: 'no-store' });
+    const response = window.blissDemo ? {ok:true,json:()=>window.blissDemo.request('/api/rooms',undefined,'GET')} : await fetch('/api/rooms', { cache: 'no-store' });
     if (!response.ok) throw new Error('Room updates unavailable');
     const { rooms } = await response.json();
     const cards = document.querySelectorAll('.room-card');

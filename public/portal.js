@@ -10,6 +10,7 @@ const badge = charge => {const value=charge.status==='pending'&&charge.due_date<
 const option = (value,label,selected) => `<option value="${e(value)}" ${value===selected?'selected':''}>${e(label)}</option>`;
 function message(value,error=false){statusBox.textContent=value;statusBox.classList.toggle('error',error);}
 async function api(path, data, method='POST') {
+  if(window.blissDemo)return window.blissDemo.request(path,data,method);
   const options={method}; if(data instanceof FormData) options.body=data;else if(data!==undefined){options.headers={'Content-Type':'application/json'};options.body=JSON.stringify(data);}
   const response=await fetch(path,options);const result=await response.json();
   if(!response.ok){if(response.status===401&&state){state=null;authScreen('login');}throw new Error(result.error||'Please try again.');}return result;
@@ -34,6 +35,7 @@ function content(admin){
   if(tab==='requests')return requests(admin);
   if(tab==='notices')return notices(admin);
   if(tab==='rooms')return roomPage();
+  if(window.blissDemo)return '<section class="panel"><h2>Demo account</h2><p>Use Try admin or Try resident above to switch views. No passwords or real accounts are needed. Reset demo restores the fictional sample data in this browser.</p></section>';
   return `<section class="panel" style="max-width:560px"><h2>Account & password</h2><p class="muted">${e(state.user.email)}</p><form data-action="password"><label>Current password<input name="currentPassword" type="password" required maxlength="128" autocomplete="current-password"></label><label>New password<input name="password" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label><p class="help">Changing your password signs out your other sessions.</p><button class="button">Update password</button></form></section>`;
 }
 function overview(admin){
